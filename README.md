@@ -180,8 +180,8 @@ your network you have multiple choices:
 
 The _Back-end_ software is run by the **Hypnotoad** web server. You could use
 this same web server to serve the _Front-end_ application. This is the
-simplest way to do it and it only requires to change the **listen** parameter of
-the **hypnotoad** key of the configuration file _asr.json_ to look like this:
+simplest way to do it and it only requires to change the `listen` parameter of
+the `hypnotoad` key of the configuration file _asr.json_ to look like this:
 
         "hypnotoad": {
            "listen" : ["http://0.0.0.0:3000"],
