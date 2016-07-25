@@ -185,8 +185,8 @@ L<http://localhost:3000>.
 =head2 Web Interface
 
 At this point the software should be available at L<http://localhost:3000/> and
-this could be enough for your setup. If you want to expose the web interface to
-your network you have multiple choices:
+you should be able to login with the credentials C<admin/secret>. If you want
+to expose the web interface to your network you have multiple choices:
 
 =head3 Hypnotoad
 

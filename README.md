@@ -173,8 +173,8 @@ After this, restart supervisor and **ASR**'s _Back-end_ should be listening at
 ## Web Interface
 
 At this point the software should be available at [http://localhost:3000/](http://localhost:3000/) and
-this could be enough for your setup. If you want to expose the web interface to
-your network you have multiple choices:
+you should be able to login with the credentials `admin/secret`. If you want
+to expose the web interface to your network you have multiple choices:
 
 ### Hypnotoad
 
