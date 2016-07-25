@@ -20,8 +20,8 @@ OS.
 
 ## Install Required Software
 
-The following software packages are required to install and run **ASR**, preferably
-they should be from your distribution package repository.
+The following software packages are required to install and run **ASR**,
+preferably they should be from your distribution package repository.
 
         sudo apt-get install build-essential perl perl-doc carton postgresql postgresql-server-dev-all supervisor
 
@@ -29,19 +29,19 @@ they should be from your distribution package repository.
 
 - Build Tools
 
-    Standard build tools are required to build some CPAN packages. In **Debian** this
-    is is provided by the **build-essential** package.
+    Standard build tools are required to build some CPAN packages. In **Debian**
+    this is provided by the **build-essential** package.
 
 - Perl
 
-    **ASR**'s _Loader_ and _Back-end_ are written in Perl. In **Debian** we need the **perl**
-    and **perl-doc** packages.
+    **ASR**'s _Loader_ and _Back-end_ are written in Perl. In **Debian** we need
+    the **perl** and **perl-doc** packages.
 
 - PostgreSQL
 
-    **ASR** needs a RDBMS system to store it's data. Currently only PostgreSQL is
+    **ASR** needs a RDBMS system to store its data. Currently only PostgreSQL is
     supported as data store. Also in order to build the Perl driver for PostgreSQL
-    we need the development headers. In **Debian** this is is provided by the packages
+    we need the development headers. In **Debian** this is provided by the packages
     **postgresql** and **postgresql-server-dev-all**.
 
 - Carton
@@ -52,22 +52,23 @@ they should be from your distribution package repository.
 
 - Supervisor
 
-    Supervisor is a process manager that will start your _Back-end_ automatically. In
-    **Debian** this tool is provided by the **supervisor** package. Of course this could
-    be achieved with any other process manager like **daemontools**, **upstart** or
-    **systemd**.
+    Supervisor is a process manager that will start your _Back-end_ automatically.
+    In **Debian** this tool is provided by the **supervisor** package. Of course this
+    could be achieved with any other process manager like **daemontools**,
+    **upstart** or **systemd**.
 
 ## Unpack and Configure Software
 
 The software can be installed anywhere you like and can be run by any user.
 Although it's **not** recommended to run it as **root**. In this document we have
-decided to install the software at _/opt/asr-1.0_ and run it as the user **www-data**.
+decided to install the software at _/opt/asr-1.0_ and run it as the user
+**www-data**.
 
         sudo tar xf asr-1.0.tar.gz -C /opt/
         cd /opt/asr-1.0
         sudo carton install --deployment
 
-After the software is unpacked and it's dependencies installed we need to edit
+After the software is unpacked and its dependencies installed we need to edit
 the configuration file and change the database connection information.  Edit
 the file _asr.json_ and change the parameters under the **db** key to match the
 database we just created, in our example it should look like this:
@@ -110,7 +111,7 @@ log files you want to load right away. This process has two steps:
 - Summarize Loaded Data
 
     Once the data is loaded, it needs to be summarized in order to be used by the
-    _Back-end_. To summarized the data we need to know which days we just loaded
+    _Back-end_. To summarized the data, we need to know which days we just loaded
     in order to execute the `materialize_user_site_hourly` database procedure with
     the proper parameters. Find out the days with the following command:
 
@@ -121,16 +122,16 @@ log files you want to load right away. This process has two steps:
 
             psql -h localhost -U asr -c "select materialize_user_site_hourly(false, '<date>')"
 
-    To summarize multiple consecutive days use the following database query:
+    To summarize multiple consecutive days, use the following database query:
 
             psql -h localhost -U asr -c "select materialize_user_site_hourly(false, '<start_date>', '<end_date>')"
 
 ## Automatic Data Processing
 
-**Squid**'s logratate configuration file normally found at _/etc/lograte.d/squid3_
-should be modified in order to load the logs once they are rotated. The
-_Loader_ assumes logs to be loaded daily and so it will call the summarize
-procedure automatically for yesterday's data.
+**Squid**'s logrotate configuration file normally found at
+_/etc/logrotate.d/squid3_ should be modified in order to load the logs once
+they are rotated. The _Loader_ assumes logs to be loaded daily and so it will
+call the summarize procedure automatically for yesterday's data.
 
         /var/log/squid3/*.log {
             daily
@@ -177,10 +178,10 @@ your network you have multiple choices:
 
 ### Hypnotoad
 
-The _Back-end_ software is run by the **Hypnotoad** web server. You could use this
-same web server to serve the _Front-end_ application. This is the simplest way
-to do it and it only requires to change the **listen** parameter of the
-**hypnotoad** key of the configuration file _asr.json_ to look like this:
+The _Back-end_ software is run by the **Hypnotoad** web server. You could use
+this same web server to serve the _Front-end_ application. This is the
+simplest way to do it and it only requires to change the **listen** parameter of
+the **hypnotoad** key of the configuration file _asr.json_ to look like this:
 
         "hypnotoad": {
            "listen" : ["http://0.0.0.0:3000"],
@@ -208,11 +209,11 @@ locations to your Nginx configuration like this:
             try_files $uri $uri/ =404;
         }
 
-Adjust the locations to your liking in case you don't want the **ASR** as your root
-application.
+Adjust the locations to your liking in case you don't want the **ASR** as your
+root application.
 
 In this setup, it's also required to inform the _Back-end_ web server it's
-being proxied to correctly generate URLs, modify _asr.json_ like this:
+being proxy to correctly generate URLs, modify _asr.json_ like this:
 
         "hypnotoad": {
             "listen" : ["http://127.0.0.1:3000"],
@@ -222,8 +223,8 @@ being proxied to correctly generate URLs, modify _asr.json_ like this:
 
 ### Apache
 
-Apache can also be used as Reverse Proxy in the same way as Nginx.
-For that we need to enable some apache modules like this:
+Apache can also be used as Reverse Proxy in the same way as Nginx.  For that we
+need to enable some apache modules like this:
 
        sudo a2enmod proxy proxy_http headers
 
@@ -236,8 +237,8 @@ And place the following directives inside your virtual host and restart apache
         #If apache's virtual host uses https uncomment the following line
         #RequestHeader set X-Forwarded-Proto "https"
 
-As with Nginx we need to inform the _Back-end_ web server it's
-being proxied to correctly generate URLs, modify _asr.json_ like this:
+As with Nginx we need to inform the _Back-end_ web server it's being proxy to
+correctly generate URLs, modify _asr.json_ like this:
 
         "hypnotoad": {
             "listen" : ["http://127.0.0.1:3000"],
@@ -256,8 +257,8 @@ the program explained next.
 
 The `asrl` script parses Squid's `access.log` file and uploads it to the
 `access_log` table. Also it handles dirty tasks like figuring out the domain
-of the URL. And finally it summarize the data from the `access_log` table into
-the `user_site_hourly` table. The `user_site_hourly` table holds data
+of the URL. And finally it summarizes the data from the `access_log` table
+into the `user_site_hourly` table. The `user_site_hourly` table holds data
 summarized by user and site. Also the time gets truncated and summarized by
 hour.
 
@@ -285,8 +286,8 @@ installation section, you will also need these:
 
         sudo apt-get install build-essential perl perl-doc carton postgresql postgresql-server-dev-all
 
-Node.js is required to build the _Front-End_, **Debian**'s current node package is
-a bit old so we can either use [nvm](https://github.com/creationix/nvm) or
+Node.js is required to build the _Front-End_, **Debian**'s current node package
+is a bit old so we can either use [nvm](https://github.com/creationix/nvm) or
 install the package from
 [NodeSource](https://github.com/nodesource/distributions) like this:
 
@@ -332,7 +333,7 @@ _public_ directory as static resources
 
         carton exec -- morbo scripts/asr
 
-Now the application should be accesible at [http://localhost:3000/](http://localhost:3000/)
+Now the application should be accessible at [http://localhost:3000/](http://localhost:3000/)
 
 ## Run Front-end Devel Server
 
@@ -353,13 +354,40 @@ To run the backend-tests use the following command:
 
 # TODO
 
-- Front-end testing.
-- Move to DBIx::Class from SQL-Abstract-More.
-- Explore the possibility of bundling carton with the distrubution so it's not required to have it on the OS.
-- Add support for **MySQL** and **SQLite**
-- The loader could provide an option \`-s|--safe\` to run the data insertion inside a transaction to have all or nothing loading.
-- Investigate pro/cons of moving the loader script to a mojo command.
-- A new field should be added to the user\_site\_hourly table to hold the \[http://wiki.squid-cache.org/SquidFaq/SquidLogs#Squid\_result\_codes\](Squid Code). This code should be taken into account when generating statistics. Specifically, DENIED should not count towards the user or site stats. Instead it should have it's own section. Also other codes should probably not be accounted and might deserve their own section as well.
+- Front-end testing
+
+    Write _Front-End_ tests.
+
+- Use DBIx::Class
+
+    Move to DBIx::Class from SQL-Abstract-More.
+
+- Bundle Carton
+
+    Explore the possibility of bundling carton with the distribution  so it's not
+    required to have it on the OS.
+
+- Support other RDBMS
+
+    Add support for **MySQL** and **SQLite**
+
+- Atomic Data Loading
+
+    The loader could provide an option \`-s|--safe\` to run the data insertion inside
+    a transaction to have all or nothing loading.
+
+- Convert Loader to a Mojolicious Command
+
+    Investigate pro/cons of moving the loader script to a mojo command.
+
+- Add support for DENIED lines
+
+    A new field should be added to the user\_site\_hourly table to hold the
+    \[http://wiki.squid-cache.org/SquidFaq/SquidLogs#Squid\_result\_codes\](Squid
+    Code). This code should be taken into account when generating statistics.
+    Specifically, DENIED should not count towards the user or site stats. Instead
+    it should have its own section. Also other codes should probably not be
+    accounted and might deserve their own section as well.
 
 # AUTHORS
 
@@ -370,4 +398,5 @@ To run the backend-tests use the following command:
 
 Copyright (C) 2015, Albatros Technology.
 
-This program is free software; you can redistribute it and/or modify it under the terms of the AGPLv3 license.
+This program is free software; you can redistribute it and/or modify it under
+the terms of the AGPLv3 license.
