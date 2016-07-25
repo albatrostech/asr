@@ -1,0 +1,379 @@
+#!/usr/bin/perl
+# vim: ts=4 sw=4
+
+use v5.10;
+use strict;
+use warnings;
+
+use Mojo::Util 'slurp';
+use Mojo::JSON 'decode_json';
+use Data::Validate::IP qw(is_ipv4);
+use DateTime;
+use DateTime::Format::Pg;
+use DBD::Pg;
+use DBI;
+use Getopt::Long;
+use Pod::Usage;
+
+my $progname = 'asrl';
+my $version = '1.0';
+my $line;
+my $dt;
+my $config;
+my ($dbh, $sth);
+my $progress;
+my $max_date;
+my $TZ = DateTime::TimeZone->new( name => 'local' );
+my $tlds = [
+'aero','asia','biz','cat','com','coop','edu','gov','info','int','jobs','mil','mobi',
+'museum','name','net','org','pro','tel','travel','xxx', 'go'
+];
+my $cc_tlds = [
+'ac','ad','ae','af','ag','ai','al','am','an','ao','aq','ar','as','at','au','aw','ax',
+'az','ba','bb','bd','be','bf','bg','bh','bi','bj','bm','bn','bo','br','bs','bt','bv',
+'bw','by','bz','ca','cc','cd','cf','cg','ch','ci','ck','cl','cm','cn','co','cr','cs',
+'cu','cv','cx','cy','cz','dd','de','dj','dk','dm','do','dz','ec','ee','eg','er','es',
+'et','eu','fi','fj','fk','fm','fo','fr','ga','gb','gd','ge','gf','gg','gh','gi','gl',
+'gm','gn','gp','gq','gr','gs','gt','gu','gw','gy','hk','hm','hn','hr','ht','hu','id',
+'ie','No','il','im','in','io','iq','ir','is','it','je','jm','jo','jp','ke','kg','kh',
+'ki','km','kn','kp','kr','kw','ky','kz','la','lb','lc','li','lk','lr','ls','lt','lu',
+'lv','ly','ma','mc','md','me','mg','mh','mk','ml','mm','mn','mo','mp','mq','mr','ms',
+'mt','mu','mv','mw','mx','my','mz','na','nc','ne','nf','ng','ni','nl','no','np','nr',
+'nu','nz','om','pa','pe','pf','pg','ph','pk','pl','pm','pn','pr','ps','pt','pw','py',
+'qa','re','ro','rs','ru','rw','sa','sb','sc','sd','se','sg','sh','si','sj','sk','sl',
+'sm','sn','so','sr','st','su','sv','sy','sz','tc','td','tf','tg','th','tj','tk','tl',
+'tm','tn','to','tp','tr','tt','tv','tw','tz','ua','ug','uk','us','uy','uz','va','vc',
+'ve','vg','vi','vn','vu','wf','ws','ye','yt','za','zm','zw'
+];
+
+my @fields;
+my @data;
+
+my %opts = (
+    'version' => 0,
+    'progress' => 0,
+    'dry-run' => 0,
+    'materialize' => 1,
+    'keep-detail' => 0,
+    'safe' => 1,
+    'help' => 0,
+    'resume' => 0,
+    'config-file' => '/etc/asr.conf'
+);
+
+GetOptions(
+#   'version|v!' => \$opts{'version'},
+#   'progress|p!' => \$opts{'progress'},
+    'dry-run|n!' => \$opts{'dry-run'},
+    'resume|r!' => \$opts{'resume'},
+    'materialize|m!' => \$opts{'materialize'},
+    'keep-detail|k!' => \$opts{'keep-detail'},
+#   'safe!' => \$opts{'safe'},
+    'help|h!' => \$opts{'help'},
+    'config-file|f=s' => \$opts{'config-file'},
+) or pod2usage(2);
+
+pod2usage(1) if $opts{'help'};
+#&version and exit(0) if $opts{'version'};
+
+pod2usage("$0: No files given.") if (@ARGV == 0) and (-t STDIN);
+
+if (!$opts{'dry-run'}) {
+    #Print help and exit if can't read the configuration file
+    pod2usage(
+        -exitval => 2,
+        -msg => "Can't open configuration file $opts{'config-file'}"
+    ) if (!-r $opts{'config-file'});
+    $config = decode_json slurp $opts{'config-file'};
+    #Only connect to the db if not in dry run
+    $dbh = DBI->connect(
+        "DBI:Pg:dbname=$$config{db}{name};host=$$config{db}{host}",
+        $$config{db}{username},
+        $$config{db}{password},
+        $$config{db}{options},
+    );
+#   $cc_tlds = $dbh->selectcol_arrayref('SELECT name FROM two_digit_tld');
+    if ($opts{'resume'}) {
+        my $tmp = $dbh->selectcol_arrayref('SELECT MAX(ltime) FROM access_log');
+        $max_date = DateTime::Format::Pg->parse_timestamp($$tmp[0]);
+    }
+    $sth = $dbh->prepare('INSERT INTO access_log VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
+}
+
+#if ($opts{'progress'}) {
+##Can only show the progressbar when we know the total number of lines
+#   $progress = Term::ProgressBar->new({name  => 'Storing',
+#                                       count => $max,
+#                                       ETA   => linear, });
+#}
+
+while ($line = <>) {
+    chomp($line);
+    @data = split(/\s+/,$line);
+
+    if ($opts{'resume'} && !$opts{'dry-run'}) {
+        my $tmp = DateTime->from_epoch( epoch => $data[0], time_zone => $TZ );
+        next if ($tmp < $max_date);
+    }
+
+    my $result = eval {
+
+        @fields = process_data(@data);
+
+        $sth->execute(@fields) if (!$opts{'dry-run'});
+    };
+
+    unless($result) {
+        say "Invalid line skipped: $line";
+    }
+
+    @fields = ();
+}
+
+if ($opts{'materialize'} && !$opts{'dry-run'}) {
+    my $yesterday = DateTime->now->subtract( days => 1 );
+    $sth = $dbh->prepare('SELECT materialize_user_site_hourly(?,?)');
+    $sth->execute($opts{'keep-detail'},DateTime::Format::Pg->format_datetime($yesterday));
+    $sth->finish;
+}
+
+$dbh->disconnect;
+
+sub process_data {
+    my @data = @_;
+    my @fields;
+    my ($host, $protocol, $port, $status);
+
+    for (0 .. $#data) {
+
+        if ($_ == 0) {
+            $dt = DateTime->from_epoch( epoch => $data[$_], time_zone => $TZ );
+            push(@fields,DateTime::Format::Pg->format_datetime($dt));
+            next;
+        }
+
+        push(@fields,split(/\//,$data[$_])) and next if $_ == 3;
+
+        if ($_ == 6) {
+            ($host, $protocol, $port) = &get_url_parts($data[$_]);
+            push(@fields,$protocol);
+            push(@fields,$host);
+            push(@fields,&get_site($host));
+            push(@fields,$port);
+            push(@fields,$data[$_]);
+            next;
+        }
+
+        push(@fields,$data[$_] =~ '-' ? undef : $data[$_]) and next if $_ == 7;
+
+        if ($_ == 8) {
+            ($status, $host) = split(/\//,$data[$_]);
+            push(@fields,$status);
+            push(@fields,(!defined($host) || $host =~ '-') ? undef : $host);
+            next;
+        }
+
+        push(@fields,$data[$_]);
+    }
+
+    return @fields;
+}
+
+
+#This function figures the site from the hostname, since there is no actual way to
+#separete the domain from the hostname this function is an educated guess, but it should
+#always return the same value for the same hostname
+sub get_site {
+    my $host = shift @_;
+    my @pieces = split(/\./, $host);
+    my $num_pieces = @pieces;
+    my @result;
+    my $first_level;
+    my $second_level;
+
+    #If we got an ip, then that's the site
+    if(is_ipv4($host)) {
+        return $host;
+    }
+
+    #No need to consolidate a site with less than three parts in it's fqdn
+    if (3 > $num_pieces) {
+        return $host;
+    }
+
+    $first_level = pop(@pieces);
+
+    if(&is_tld($first_level)) {
+        #If the first part is a tld return the first two parts as the site
+        push(@result, $first_level);
+        push(@result, pop(@pieces));
+    } elsif (&is_cc_tld($first_level)) {
+        #If the first part is a country code tld we need to check the second part
+        push(@result, $first_level);
+        $second_level = pop(@pieces);
+        if(&is_tld($second_level) || &is_cc_tld($second_level)) {
+            #If the second part is a tld return the first three parts as the site
+            push(@result, $second_level);
+            push(@result, pop(@pieces));
+        } else {
+            #If not just return the first two parts as the site
+            push(@result, $second_level);
+        }
+    } else {
+        #If everything else fails, return the first three parts as the site
+        push(@result, $first_level);
+        if (2 > $#pieces) {
+            push(@result, @pieces[0,1]);
+        } else {
+            push(@result, @pieces);
+        }
+    }
+
+    return join('.',reverse(@result));
+}
+
+sub is_tld {
+    my $dpart = shift;
+    my @result;
+    @result = grep { $_ eq $dpart } @$tlds;
+    return scalar @result;
+}
+
+sub is_cc_tld {
+    my $dpart = shift;
+    my @result;
+    @result = grep { $_ eq $dpart } @$cc_tlds;
+    return scalar @result;
+}
+
+sub get_url_parts {
+    my $url = lc shift @_;
+    my $host = undef;
+    my $protocol = undef;
+    my $port = undef;
+    my $tmp = undef;
+
+    if ($url =~ m!(.+?)://(.+?)/.*!) {
+        $protocol = $1;
+        $tmp = $2;
+        if ($tmp =~ /(.+?):(.+?)@(.+)/) {
+            ($host, $port) = split(':',$3);
+        } else {
+            ($host, $port) = split(':',$2);
+        }
+    } elsif ($url =~ /(.+):(\d+)/) {
+        $host = $1;
+        $port = $2;
+        if (443 == $port) {
+            $protocol = 'https';
+        }
+    } else {
+        $host = $url;
+    }
+    return ($host, $protocol, $port);
+}
+
+
+__END__
+
+=encoding utf8
+
+=head1 NAME
+
+asrl - Albatros Squid Reports Loader
+
+=head1 SYNOPSIS
+
+asrl [OPTION ...] [FILE ...]
+
+Where FILE is the path to the squid F<access.log> file to load. If no FILE is given then asrl will default to reading from STDIN. All non argument options can be negated by appending a 'no' at the begining e.g. B<--no-materialize>.
+
+=head2 Option Summary
+
+=over 4
+
+=item B<--help|-h>
+
+Prints help and exit.
+
+=item B<--safe|-s>
+
+Single database transaction. I<UNIMPLEMEMNTED>
+
+=item B<--progress|-p>
+
+Display progress bar. I<UNIMPLEMEMNTED>
+
+=item B<--dry-run|-n>
+
+Does not modify the database.
+
+=item B<--resume|-r>
+
+Resume incompletely uploaded file. I<USE WITH CAUTION, READ THE MANUAL>
+
+=item B<--config-file|-f>
+
+Configuration file to use.
+
+=item B<--materialize|-m>
+
+Excute database sumarizing procedures.
+
+=item B<--keep-detail|-k>
+
+Keed the detail data in the access_log table.
+
+=back
+
+=head1 DESCRIPTION
+
+This program loads a squid access.log file into the asrl database.
+
+=head1 OPTIONS AND ARGUMENTS
+
+=over 4
+
+=item B<--help>
+
+Prints this help and exit. No arguments allowed.
+
+=item B<--safe>
+
+Wraps all database changes in a single transaction. Enabled by default. No arguments allowed. I<UNIMPLEMENTED>
+
+=item B<--progress>
+
+Prints a nice progress bar with ETA for interactive use. Disabled by default. No arguments allowed. I<UNIMPLEMEMNTED>
+
+=item B<--dry-run>
+
+In this mode the program does not interact with the database in any way. So things like B<--materialize> or B<--resume> will be silently ignored. Usefull for testing corrupted log files without touching the database. Disabled by default. No arguments allowed.
+
+=item B<--resume>
+
+I<USE WITH CAUTION>. This option allows asrl to be able to resume an incomplete upload. It's possible to loose data with this option due to the possibility to have multiple log entries at the same milisecond. Since this option will resume the upload the the next milisecond of the current MAX value of the database. Disabled by default, No arguments allowed.
+
+=item B<--config-file>
+
+Sets configuration file to use. Defaults to F</etc/asr.conf>. String arguments required.
+
+=item B<--materialize>
+
+This flag will automatically call the materialize_user_site_hourly procedure in the database to make yesterday's data available for reporting. Enabled by default. No arguments allowed.
+
+=item B<--keep-detail>
+
+If materialize is specified, this flag will determine whether or not to keep the details in the access_log table. This will considerably slow down the materialization process because it will also link each detail record in access_log to the it's corresponding  master record in user_site_hourly. Disabled by default. No arguments allowed.
+
+=back
+
+=head1 COPYRIGHT
+
+Copyright (c) Albatros Technology
+
+=head1 AUTHOR
+
+Carlos Ramos Gómez <cramos at albatros-tech dot net>
+
+=cut

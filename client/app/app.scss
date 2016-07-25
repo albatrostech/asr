@@ -1,0 +1,28 @@
+$icon-font-path: "/bower_components/bootstrap-sass-official/assets/fonts/bootstrap/";
+$fa-font-path: "/bower_components/font-awesome/fonts";
+
+@import '../bower_components/font-awesome/scss/font-awesome';
+@import '../bower_components/bootswatch-scss/flatly/_variables.scss';
+@import '../bower_components/bootstrap-sass-official/assets/stylesheets/bootstrap';
+@import '../bower_components/bootswatch-scss/flatly/_bootswatch.scss';
+
+/**
+ * App-wide Styles
+ */
+
+.browsehappy {
+    margin: 0.2em 0;
+    background: #ccc;
+    color: #000;
+    padding: 0.2em 0;
+}
+
+// Component styles are injected through grunt
+/* inject:scss */
+@import 'account/login/login.scss';
+@import 'admin/admin.scss';
+@import 'main/main.scss';
+@import 'sites/sites.scss';
+@import 'users/users.scss';
+@import '../components/modal/modal.scss';
+/* endinject */

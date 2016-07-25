@@ -1,0 +1,43 @@
+{
+  "generator-angular-fullstack": {
+    "insertRoutes": true,
+    "registerRoutesFile": "server/routes.js",
+    "routesBase": "/api/",
+    "pluralizeRoutes": true,
+    "insertSockets": true,
+    "filters": {
+      "js": true,
+      "html": true,
+      "sass": true,
+      "uirouter": true,
+      "bootstrap": true,
+      "uibootstrap": true,
+      "auth": true
+    }
+  },
+  "generator-ng-component": {
+    "routeDirectory": "client/app/",
+    "directiveDirectory": "client/components/",
+    "filterDirectory": "client/components/",
+    "serviceDirectory": "client/components/",
+    "basePath": "client",
+    "moduleName": "",
+    "filters": [
+      "uirouter"
+    ],
+    "extensions": [
+      "js",
+      "html",
+      "scss"
+    ],
+    "directiveSimpleTemplates": "",
+    "directiveComplexTemplates": "",
+    "filterTemplates": "",
+    "serviceTemplates": "",
+    "factoryTemplates": "",
+    "controllerTemplates": "",
+    "decoratorTemplates": "",
+    "providerTemplates": "",
+    "routeTemplates": ""
+  }
+}

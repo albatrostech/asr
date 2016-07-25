@@ -1,0 +1,15 @@
+-- Deploy asr:role-table to pg
+-- requires: setmodified
+
+BEGIN;
+
+CREATE TABLE role (
+    id SERIAL NOT NULL PRIMARY KEY,
+    name VARCHAR(64) NOT NULL UNIQUE,
+    description VARCHAR(1024),
+    created TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    modified TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TRIGGER setmodified BEFORE INSERT OR UPDATE ON role FOR EACH ROW EXECUTE PROCEDURE setmodified();
+
+COMMIT;

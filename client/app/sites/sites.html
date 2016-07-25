@@ -1,0 +1,65 @@
+<div ng-include="'components/navbar/navbar.html'"></div>
+
+<section class="container">
+   <div class="row">
+      <div class="col-md-7">
+         <h2>
+            {{list.viewTitle}}
+            <span class="pull-right">
+               <button type="button" class="btn btn-primary" data-ng-click="list.makePDF()">Export PDF</button>
+            </span>
+         </h2>
+      </div>
+   </div>
+   <div class="row">
+      <div class="col-md-7">
+         <table class="table table-striped table-bordered table-hover">
+            <thead>
+               <tr>
+                  <th class="clickable"
+                     data-ng-repeat="column in list.columnNames"
+                     data-ng-click="list.sortColumn($event, column)">
+                     <span class="clickable text">{{list.columns[column].label}}</span>
+                     <span class="fa fa-sort"
+                        data-ng-show="list.columns[column].sortDir === null"></span>
+                     <span class="fa fa-sort-asc"
+                        data-ng-show="list.columns[column].sortDir === 'asc'"></span>
+                     <span class="fa fa-sort-desc"
+                        data-ng-show="list.columns[column].sortDir === 'desc'"></span>
+                  </th>
+               </tr>
+            </thead>
+            <tbody>
+               <tr data-ng-repeat="site in list.sites">
+                  <td data-ng-repeat="column in list.columnNames">
+                     <span data-ng-if="column === 'site'">
+                        <a data-ui-sref="users({site: site[column], start: list.startDate, end: list.endDate})"
+                           tooltip-placement="top" tooltip="View site detail" tooltip-trigger>
+                           <span class="fa fa-info-circle"></span>
+                        </a>
+                     </span>
+                     <span>{{list.columns[column].format(site[column])}}</span>
+                  </td>
+               </tr>
+            </tbody>
+         </table>
+         <div style="text-align: center">
+            <ul uib-pagination total-items="list.totalItems" ng-model="list.index" max-size="10" items-per-page="list.size" class="pagination-sm" rotate="false" num-pages="numPages" ng-change="list.newIndex()"></ul>
+         </div>
+      </div>
+      <div class="col-md-5">
+         <div class="panel panel-default">
+            <div class="panel-heading"><span><b>{{list.chartBytesTitle}}</b></span></div>
+            <div class="panel-body">
+               <canvas id="chartBytes" class="chart chart-pie" data="list.dataBytes" labels="list.labelsBytes" chart-legend="true" options="list.bytesChartOptions"></canvas>
+            </div>
+         </div>
+         <div class="panel panel-default">
+            <div class="panel-heading"><span><b>{{list.chartTimeTitle}}</b></span></div>
+            <div class="panel-body">
+               <canvas id="chartTime" class="chart chart-pie" data="list.dataTime" labels="list.labelsTime" chart-legend="true" options="list.timeChartOptions"></canvas>
+            </div>
+         </div>
+      </div>
+   </div>
+</section>

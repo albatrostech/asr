@@ -1,0 +1,15 @@
+{
+   "page_index": 1,
+   "page_size": 10,
+   "db": {
+      "name": "asr",
+      "type": "pgsql",
+      "host": "localhost",
+      "username": "asr",
+      "password": "asr"
+   },
+   "hypnotoad": {
+      "listen" : ["http://127.0.0.1:3000"],
+      "workers": 2
+   }
+}

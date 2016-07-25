@@ -1,0 +1,8 @@
+% use DateTime;
+% my $message = $exception->message if app->mode eq 'development';
+% $message = $message // 'Internal server error.';
+{
+    "timestamp": "<%= DateTime->now %>",
+    "status": "<%= $status %>",
+    "message": "<%= $message %>"
+}

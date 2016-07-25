@@ -1,0 +1,16 @@
+%syntax-version=1.0.0
+%project=asr
+%uri=https://github.com/albatrostech/asr/
+
+setmodified 2015-09-21T01:48:09Z Carlos Ramos <carragom@gmail.com> # Create setmodified procedure.
+user-table [setmodified] 2015-09-21T14:49:05Z Carlos Ramos <carragom@gmail.com> # Create user table.
+role-table [setmodified] 2015-09-21T01:35:13Z Carlos Ramos <carragom@gmail.com> # Create role table.
+user_role-table [user-table role-table] 2015-09-21T01:38:03Z Carlos Ramos <carragom@gmail.com> # Create user_role table.
+role-data [role-table] 2015-09-21T01:45:03Z Carlos Ramos <carragom@gmail.com> # Insert default roles.
+user-data [user-table] 2015-09-21T01:50:03Z Carlos Ramos <carragom@gmail.com> # Insert default users.
+user_role-data [user_role-table] 2015-09-21T01:55:03Z Carlos Ramos <carragom@gmail.com> # Assign default roles.
+access_log-table 2015-09-22T05:23:46Z Carlos Ramos <carragom@gmail.com> # Create access_log table.
+access_log-indexes [access_log-table] 2015-09-22T06:11:08Z Carlos Ramos <carragom@gmail.com> # Create access_log indexes.
+user_site_hourly-table 2015-09-22T05:57:59Z Carlos Ramos <carragom@gmail.com> # Create user_site_hourly table.
+user_site_hourly-indexes [user_site_hourly-table] 2015-09-22T06:15:36Z Carlos Ramos <carragom@gmail.com> # Create user_site_hourly indexes.
+materialize_user_site_hourly [user_site_hourly-table access_log-table] 2015-09-22T06:35:29Z Carlos Ramos <carragom@gmail.com> # Create materialize_user_site_hourly procedure.

@@ -1,0 +1,38 @@
+<div ng-include="'components/navbar/navbar.html'"></div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-sm-12">
+      <h1>Change Password</h1>
+    </div>
+    <div class="col-sm-12">
+      <form class="form" name="form" ng-submit="settingsVM.changePassword(form)" novalidate>
+
+        <div class="form-group">
+          <label>Current Password</label>
+
+          <input type="password" name="password" class="form-control"
+            ng-model="settingsVM.user.oldPassword" mongoose-error/>
+          <p class="help-block" ng-show="settingsVM.form.password.$error.mongoose">
+              {{ settingsVM.errors.other }}
+          </p>
+        </div>
+
+        <div class="form-group">
+          <label>New Password</label>
+
+          <input type="password" name="newPassword" class="form-control"
+              ng-model="settingsVM.user.newPassword" ng-minlength="3" required/>
+          <p class="help-block"
+             ng-show="(settingsVM.form.newPassword.$error.minlength || settingsVM.form.newPassword.$error.required) && (settingsVM.form.newPassword.$dirty || settingsVM.submitted)">
+            Password must be at least 3 characters.
+          </p>
+        </div>
+
+        <p class="help-block"> {{ settingsVM.message }} </p>
+
+        <button class="btn btn-lg btn-primary" type="submit">Save changes</button>
+      </form>
+    </div>
+  </div>
+</div>

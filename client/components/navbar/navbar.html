@@ -1,0 +1,53 @@
+<div class="navbar navbar-default navbar-static-top" ng-controller="NavbarCtrl">
+   <div class="container">
+      <div class="navbar-header">
+         <button class="navbar-toggle" type="button" ng-click="isCollapsed = !isCollapsed">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+         </button>
+         <a data-ui-sref="main" class="navbar-brand">ASR</a>
+      </div>
+      <div collapse="isCollapsed" class="navbar-collapse collapse" id="navbar-main">
+         <ul class="nav navbar-nav">
+            <li data-ui-sref-active="active" ng-repeat="item in menu" ng-class="{active: isActive(item.link)}">
+               <a data-ui-sref="{{item.link}}(getDateParams())">{{item.title}}</a>
+            </li>
+            <li ng-show="isAdmin()" data-ui-sref-active="active"><a data-ui-sref="admin">Admin</a></li>
+         </ul>
+
+         <ul class="nav navbar-nav navbar-right">
+            <!-- <li ng-hide="isLoggedIn()" data-ui-sref-active="active"><a data-ui-sref="signup">Sign up</a></li> -->
+            <li ng-hide="isLoggedIn()" data-ui-sref-active="active"><a data-ui-sref="login">Login</a></li>
+            <li ng-show="isLoggedIn()"><p class="navbar-text">Hello {{ getCurrentUser().name }}</p> </li>
+            <li ng-show="isLoggedIn()" data-ui-sref-active="active"><a data-ui-sref="settings"><span class="glyphicon glyphicon-cog"></span></a></li>
+            <li ng-show="isLoggedIn()"><a data-ui-sref="main" ng-click="logout()">Logout</a></li>
+         </ul>
+
+         <form class="navbar-form navbar-left" ng-show="showPickers()">
+            <div class="form-group has-feedback" data-ng-click="tooglePicker('startOpen')">
+               <input class="form-control"
+                  type="text"
+                  data-uib-datepicker-popup="yyyy-MM-dd"
+                  data-show-button-bar="false"
+                  data-ng-model="startDate"
+                  data-is-open="startOpen"
+                  data-max-date="endDate"/>
+               <span class="glyphicon glyphicon-calendar form-control-feedback"  aria-hidden="true"></span>
+            </div>
+            <div class="form-group has-feedback" data-ng-click="tooglePicker('endOpen')">
+               <input class="form-control"
+                  type="text"
+                  data-uib-datepicker-popup="yyyy-MM-dd"
+                  data-show-button-bar="false"
+                  data-ng-model="endDate"
+                  data-is-open="endOpen"
+                  data-max-date="maxDate"
+                  data-min-date="startDate"/>
+               <span class="glyphicon glyphicon-calendar form-control-feedback" aria-hidden="true"></span>
+            </div>
+         </form>
+      </div>
+   </div>
+</div>
