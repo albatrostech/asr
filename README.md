@@ -358,6 +358,7 @@ To run the backend-tests use the following command:
 
     Write _Front-End_ tests.
 
+- Setup Travis CI
 - Use DBIx::Class
 
     Move to DBIx::Class from SQL-Abstract-More.
