@@ -396,9 +396,8 @@ Investigate pro/cons of moving the loader script to a mojo command.
 
 =item * Add support for DENIED lines
 
-A new field should be added to the user_site_hourly table to hold the
-[http://wiki.squid-cache.org/SquidFaq/SquidLogs#Squid_result_codes](Squid
-Code). This code should be taken into account when generating statistics.
+A new field should be added to the C<user_site_hourly> table to hold the
+L<SquidCode|http://wiki.squid-cache.org/SquidFaq/SquidLogs#Squid_result_codes>. This code should be taken into account when generating statistics.
 Specifically, DENIED should not count towards the user or site stats. Instead
 it should have its own section. Also other codes should probably not be
 accounted and might deserve their own section as well.

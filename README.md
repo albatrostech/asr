@@ -382,9 +382,8 @@ To run the backend-tests use the following command:
 
 - Add support for DENIED lines
 
-    A new field should be added to the user\_site\_hourly table to hold the
-    \[http://wiki.squid-cache.org/SquidFaq/SquidLogs#Squid\_result\_codes\](Squid
-    Code). This code should be taken into account when generating statistics.
+    A new field should be added to the `user_site_hourly` table to hold the
+    [SquidCode](http://wiki.squid-cache.org/SquidFaq/SquidLogs#Squid_result_codes). This code should be taken into account when generating statistics.
     Specifically, DENIED should not count towards the user or site stats. Instead
     it should have its own section. Also other codes should probably not be
     accounted and might deserve their own section as well.
